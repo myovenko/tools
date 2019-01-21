@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h3>Table conversion</h3>
+<p>This tool converts text representation of table from one format to another. For example if you need to convert results of SQL query into JIRA markup.</p>
+<p></p>
+<p>Input table:</p>
+<p>Input table type:
+<select id="input_type">
+	<option value="plain_space">Plain text (space delimiter)</option>
+	<option value="plain_tab">Plain text (tab delimiter)</option>
+</select>
+</p>
+
+<textarea id="in_text" rows="10" cols="80">
+</textarea>
+<p></p>
+
+<p>Output table type:
+<select id="output_type">
+	<option value="plain_space">Plain text (space delimiter)</option>
+	<option value="plain_tab">Plain text (tab delimiter)</option>
+	<option value="jira">JIRA markup</option>
+</select>
+</p>
+
+<button onclick="convertTable()">Convert it</button>
+
+<p>Results:</p>
+<textarea id="out_text" rows="10" cols="80">
+</textarea>
+
+<p></p>
+<p>
+Contacts: 
+<a href="mailto:max.yovenko@gmail.com?Subject=Table%20Conversion%20Tool" target="_top">max.yovenko@gmail.com</a>
+</p>
+
+<script>
+function getParams(type) {
+   var plain_table_params = {
+	 col_delimiter: " ", 
+     row_delimiter : "\n",
+     type : "plain"};
+   plain_table_params.header_params = plain_table_params;
+   
+  var jira_table_params = {
+    col_delimiter: "|", 
+    row_delimiter : "\n",
+    border : true, 
+    type : "jira"};
+  jira_table_params.header_params = {
+    col_delimiter: "||", 
+    row_delimiter : "\n",
+    border : true,  
+    type : "jira_header"};
+	
+	if (type === "plain_space") return plain_table_params;
+	if (type === "jira") return jira_table_params;
+	if (type === "plain_tab") {
+		plain_table_params.col_delimiter = "\t";
+		return plain_table_params;
+	}
+}
+
+function convertTable() {
+  var parse_params = getParams(document.getElementById("input_type").value);
+  var render_params = getParams(document.getElementById("output_type").value);
+  var input = document.getElementById("in_text").value; 
+  var table = parse(parse_params, input);
+  document.getElementById("out_text").value = render(render_params, table); 
+}
+
+function parse(parse_params, text) {
+  var rows = text.split(parse_params.row_delimiter);
+  var arrayLength = rows.length;
+  var table = []
+  for (var i = 0; i < arrayLength; i++) {
+    if (rows[i].length == 0) {
+	   continue;
+	}
+
+    var rowVals = []
+	if (i == 0) {	
+       rowVals = parseRow(parse_params.header_params, rows[i]);
+	} else {
+	   rowVals = parseRow(parse_params, rows[i]);
+	}
+	table.push(rowVals);
+  }
+  return table;
+}
+
+function parseRow(parse_params, line) {
+    var cols = line.split(parse_params.col_delimiter);
+	return cols;
+}
+
+function render(render_params, table) {
+    var result = "";
+	for (var i = 0; i < table.length; i++) {
+	   if (i == 0) {
+		  result = result + renderRow(render_params.header_params, table[i]);
+	   } else {
+	      result = result + renderRow(render_params, table[i]);
+	   }
+	}
+	return result;
+}
+
+function renderRow(params, row) {
+    var res = "";
+	for (var i = 0; i < row.length; i++) {
+	   if (i > 0) {
+	      res = res + params.col_delimiter;
+	   }
+	   res = res + row[i];
+	}
+	if (params.border) {
+	   res = params.col_delimiter + res + params.col_delimiter;
+	}
+	res = res + params.row_delimiter;
+	return res;
+}
+
+</script>
+
+</body>
+</html>
